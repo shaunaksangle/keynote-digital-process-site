@@ -4,12 +4,25 @@ const navToggle = document.querySelector("[data-nav-toggle]");
 const form = document.querySelector("[data-contact-form]");
 const formNote = document.querySelector("[data-form-note]");
 
+let headerScrolled = false;
+let headerTicking = false;
+
 const setHeaderState = () => {
-  header.classList.toggle("is-scrolled", window.scrollY > 12);
+  const shouldBeScrolled = headerScrolled ? window.scrollY > 8 : window.scrollY > 36;
+  if (shouldBeScrolled !== headerScrolled) {
+    headerScrolled = shouldBeScrolled;
+    header.classList.toggle("is-scrolled", shouldBeScrolled);
+  }
+  headerTicking = false;
 };
 
 setHeaderState();
-window.addEventListener("scroll", setHeaderState, { passive: true });
+window.addEventListener("scroll", () => {
+  if (!headerTicking) {
+    headerTicking = true;
+    requestAnimationFrame(setHeaderState);
+  }
+}, { passive: true });
 
 navToggle.addEventListener("click", () => {
   const isOpen = nav.classList.toggle("is-open");
