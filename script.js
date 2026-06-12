@@ -84,9 +84,88 @@ document.querySelectorAll("[data-count]").forEach((element) => {
   countObserver.observe(element);
 });
 
+const clearFormErrors = () => {
+  form.querySelectorAll(".field-error").forEach((error) => error.remove());
+  form.querySelectorAll(".has-error").forEach((label) => label.classList.remove("has-error"));
+  formNote.classList.remove("success", "error");
+};
+
+const addFieldError = (field, message) => {
+  const label = field.closest("label");
+  if (!label) return;
+  label.classList.add("has-error");
+  const error = document.createElement("span");
+  error.className = "field-error";
+  error.textContent = message;
+  label.appendChild(error);
+};
+
+const validateContactForm = () => {
+  clearFormErrors();
+  const data = new FormData(form);
+  const fields = {
+    name: form.elements.name,
+    email: form.elements.email,
+    company: form.elements.company,
+    phone: form.elements.phone,
+    requirement: form.elements.requirement,
+    message: form.elements.message
+  };
+  let isValid = true;
+
+  if (String(data.get("name") || "").trim().length < 2) {
+    addFieldError(fields.name, "Please enter your full name.");
+    isValid = false;
+  }
+
+  if (!fields.email.validity.valid) {
+    addFieldError(fields.email, "Please enter a valid business email.");
+    isValid = false;
+  }
+
+  if (String(data.get("company") || "").trim().length < 2) {
+    addFieldError(fields.company, "Please enter your company name.");
+    isValid = false;
+  }
+
+  if (data.get("phone") && !fields.phone.validity.valid) {
+    addFieldError(fields.phone, "Please enter a valid phone number.");
+    isValid = false;
+  }
+
+  if (!data.get("requirement")) {
+    addFieldError(fields.requirement, "Please select a focus area.");
+    isValid = false;
+  }
+
+  if (String(data.get("message") || "").trim().length < 10) {
+    addFieldError(fields.message, "Please add a short requirement summary.");
+    isValid = false;
+  }
+
+  return isValid;
+};
+
+form.noValidate = true;
+
+form.addEventListener("input", (event) => {
+  const label = event.target.closest("label");
+  if (label) {
+    label.classList.remove("has-error");
+    label.querySelector(".field-error")?.remove();
+  }
+  formNote.classList.remove("error");
+});
+
 form.addEventListener("submit", (event) => {
   event.preventDefault();
-  formNote.textContent = "Thanks. This preview form is ready to connect to your preferred email or CRM workflow.";
+  if (!validateContactForm()) {
+    formNote.textContent = "Please correct the highlighted fields before sending.";
+    formNote.classList.add("error");
+    return;
+  }
+
+  formNote.textContent = "Thanks. Your enquiry is captured in this preview and ready to connect to email or CRM workflow.";
   formNote.classList.add("success");
   form.reset();
 });
